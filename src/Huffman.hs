@@ -76,6 +76,7 @@ data Tree = Leaf !Int | Node Tree Tree
 buildCodeLengths :: Histogram -> CodeLengths
 buildCodeLengths h = go (elems h)
   where
+    go :: [Int] -> CodeLengths
     go freqs =
       let ls = huffmanLengths freqs
       in  if maximum (0 : ls) <= maxCodeLen
@@ -129,10 +130,8 @@ canonicalCodes ls = assign 0 0 (sortedSymbols ls)
 -- Кодування
 ---------------------------------------------------------------------
 
-data Encoder = Encoder
-  { encCodes :: !(UArray Int Word64)
-  , encLens  :: !(UArray Int Int)
-  }
+-- | Коди та їхні довжини для кожного байта.
+data Encoder = Encoder !(UArray Int Word64) !(UArray Int Int)
 
 mkEncoder :: CodeLengths -> Encoder
 mkEncoder ls = Encoder codes ls
@@ -142,7 +141,7 @@ mkEncoder ls = Encoder codes ls
 
 -- | Скільки біт займе блок із заданою гістограмою.
 encodedBits :: Encoder -> Histogram -> Int
-encodedBits enc h = sum (zipWith (*) (elems h) (elems (encLens enc)))
+encodedBits (Encoder _ lens) h = sum (zipWith (*) (elems h) (elems lens))
 
 -- | Закодувати блок. nBits — точна кількість біт (з encodedBits).
 encodeChunk :: Encoder -> Int -> BS.ByteString -> BS.ByteString
@@ -169,12 +168,10 @@ encodeChunk (Encoder codes lens) nBits input = BI.unsafeCreate nBytes (\p -> go 
 -- Декодування
 ---------------------------------------------------------------------
 
-data Decoder = Decoder
-  { decFirst  :: !(UArray Int Int)    -- перший код довжини L (індекс L-1)
-  , decCount  :: !(UArray Int Int)    -- кількість кодів довжини L
-  , decOffset :: !(UArray Int Int)    -- позиція першого символу довжини L у decSyms
-  , decSyms   :: !(UArray Int Word8)  -- символи в канонічному порядку
-  }
+-- | Таблиці канонічного декодування (масиви за довжиною коду L = 1..maxCodeLen):
+--   перший код довжини L, кількість кодів довжини L, позиція першого символу
+--   довжини L у масиві символів, символи в канонічному порядку.
+data Decoder = Decoder !(UArray Int Int) !(UArray Int Int) !(UArray Int Int) !(UArray Int Word8)
 
 mkDecoder :: CodeLengths -> Decoder
 mkDecoder ls = Decoder firstA countA offsetA symsA
