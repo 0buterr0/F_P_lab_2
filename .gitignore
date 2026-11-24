@@ -1,0 +1,15 @@
+dist-newstyle/
+dist/
+.stack-work/
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+cabal.project.local*
+.ghc.environment.*
+.vscode/
+testdata/
+*.huf
+*_unpacked/
+out/
+bench.csv

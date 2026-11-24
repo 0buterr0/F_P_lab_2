@@ -1,0 +1,26 @@
+cabal-version:      2.4
+name:               huffman-archiver
+version:            0.1.0.0
+synopsis:           Multithreaded Huffman archiver (functional programming, lab 2)
+author:             Lamash Maksym, IPS-42
+build-type:         Simple
+extra-doc-files:    README.md
+
+executable huff
+  main-is:          Main.hs
+  hs-source-dirs:   app, src
+  other-modules:    Huffman
+                    Parallel
+                    Archive
+                    Bench
+  build-depends:    base >=4.14 && <5
+                  , bytestring
+                  , containers
+                  , array
+                  , directory
+                  , filepath
+                  , text
+  if os(windows)
+    build-depends:  Win32
+  default-language: Haskell2010
+  ghc-options:      -O2 -threaded -rtsopts "-with-rtsopts=-N -A64m" -Wall
